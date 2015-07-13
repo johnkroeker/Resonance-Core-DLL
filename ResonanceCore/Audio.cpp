@@ -6,6 +6,7 @@
 #include "Audio.h"
 #include <propvarutil.h>
 
+//#include "ResonanceStudioDoc.h"
 #include "Logger.h"
 #include "MFapi.h"
 #include "mmreg.h"
@@ -28,12 +29,10 @@ template <class T> void SafeRelease(T **ppT)
         *ppT = NULL;
     }
 }
-// global for convenience of logging
-extern Logger *theLogger;
+// global for convenience of output
+//extern COutputWnd *theOutputWindow;
 
 // AudioFoundation
-
-
 // Audio construction
 
 AudioFoundation::AudioFoundation()
@@ -48,11 +47,11 @@ BOOL AudioFoundation::Initialize()
 	HRESULT hr = MFStartup(MF_VERSION);
 	if ( hr == MF_E_BAD_STARTUP_VERSION )
 	{
-		Report(CString( "Incompatible version of Media Foundation") );
+		pTheLogger->fatal( CString("AudioFoundation"), CString( "Incompatible version of Media Foundation") );
 		return FALSE;
 	} else if ( hr != S_OK )
 	{
-		Report(CString( "Can't start up Media Foundation") );
+		pTheLogger->fatal( CString("AudioFoundation"), CString( "Can't start up Media Foundation") );
 		return FALSE;
 	}
 return TRUE;
@@ -63,15 +62,6 @@ BOOL AudioFoundation::Shutdown()
 	MFShutdown();
 	return TRUE;
 }
-
-void AudioFoundation::Report(CString s)
-{
-	CString announce;
-	announce += "AudioFoundation:  ";
-	announce += s;
-	theLogger->output(announce);
-}
-
 
 // AudioSource
 AudioSource::AudioSource()
@@ -114,7 +104,7 @@ BOOL AudioSource::Create(const wchar_t * lpszPathName)
 		DWORD err = GetLastError();
 		WCHAR buffer[128];
 		FormatMessage( FORMAT_MESSAGE_FROM_SYSTEM, NULL, err,0, buffer,128,NULL);
-		Report(buffer );
+		pTheLogger->fatal( CString("AudioSource"), buffer );
 		CloseHandle( hFile );
 		return FALSE;
 	}
@@ -123,7 +113,7 @@ BOOL AudioSource::Create(const wchar_t * lpszPathName)
 	{
 		//CString s;	
 		//s.Format( _T("Can't open media source from URL %s"), lpszPathName );	
-		Report( _T("File size is zero: can't use.") );
+		pTheLogger->fatal( CString("AudioSource"), _T("File size is zero: can't use.") );
 		CloseHandle( hFile );
 		return FALSE;
 	}
@@ -134,7 +124,7 @@ BOOL AudioSource::Create(const wchar_t * lpszPathName)
 	{
 		CString s;	
 		s.Format( _T("Can't open media source from URL %s"), lpszPathName );	
-		Report(s);
+		pTheLogger->fatal( CString("AudioSource"), s);
 		return FALSE;
 	}
 
@@ -142,11 +132,11 @@ BOOL AudioSource::Create(const wchar_t * lpszPathName)
 	fileDuration = GetDurationSeconds();
 	CString s;
 	s.Format( _T("%s opened, duration is %10.5f seconds."), lpszPathName, fileDuration );
-	Report(s);
+	pTheLogger->info( CString("AudioSource"), s);
 	ReportAttributes();
 	if (!ConfigureAudioStream() )
 	{
-		Report( L"Can't configure stream" );
+		pTheLogger->fatal( CString("AudioSource"),  _T("Can't configure stream") );
 		return FALSE;
 	}
 	// test here-- we should be PCM now.
@@ -164,14 +154,6 @@ BOOL AudioSource::ReleaseReader()
 	SafeRelease( &pMediaSample);
 	SafeRelease(&pReader);
 	return TRUE;
-}
-
-void AudioSource::Report(CString s)
-{
-	CString announce;
-	announce += "AudioSource:  ";
-	announce += s;
-	theLogger->output(announce);
 }
 
 double AudioSource::GetPCMSamplingRate()
@@ -239,7 +221,7 @@ BOOL AudioSource::ReadSample( BOOL *pEndOfStream )
 	*pEndOfStream = FALSE;
 
 	HRESULT hr = pReader->ReadSample(
-        MF_SOURCE_READER_FIRST_AUDIO_STREAM,    // Stream index.
+        (DWORD) MF_SOURCE_READER_FIRST_AUDIO_STREAM,    // Stream index.
         0,                              // Flags.
         &streamIndex,                   // Receives the actual stream index. 
         &flags,                         // Receives status flags.
@@ -259,34 +241,34 @@ BOOL AudioSource::ReadSample( BOOL *pEndOfStream )
 
 //	CString s;
 //    s.Format( L"Reading Stream %d (%I64d)...\n", (int) streamIndex, llTimeStamp);
-//	Report(s);
+//	report(s);
     if (flags & MF_SOURCE_READERF_ENDOFSTREAM)
     {
-        Report(L"\tEnd of stream\n");
+        pTheLogger->info( CString("AudioSource"), _T("\tEnd of stream\n") );
         SafeRelease(&pMediaSample);
 		*pEndOfStream = TRUE;
 		return TRUE;
     }
     if (flags & MF_SOURCE_READERF_NEWSTREAM)
     {
-        Report(L"\tNew stream\n");
+        pTheLogger->info( CString("AudioSource"), L"\tNew stream\n");
     }
     if (flags & MF_SOURCE_READERF_NATIVEMEDIATYPECHANGED)
     {
-        Report(L"\tNative type changed\n");
+        pTheLogger->info( CString("AudioSource"), L"\tNative type changed\n");
     }
     if (flags & MF_SOURCE_READERF_CURRENTMEDIATYPECHANGED)
     {
-        Report(L"\tCurrent type changed\n");
+        pTheLogger->info( CString("AudioSource"), L"\tCurrent type changed\n");
     }
     if (flags & MF_SOURCE_READERF_STREAMTICK)
     {
-        Report(L"\tStream tick\n");
+        pTheLogger->info( CString("AudioSource"), L"\tStream tick\n");
     }
 
     if (flags & MF_SOURCE_READERF_NATIVEMEDIATYPECHANGED)
     {
-		Report(L"\tFail: Format changed.");
+		pTheLogger->fatal( CString("AudioSource"), L"\tFail: Format changed.");
      // The format changed. Reconfigure the decoder.
         //hr = ConfigureAudioStream(streamIndex);
        // if (FAILED(hr))
@@ -303,13 +285,13 @@ BOOL AudioSource::ReadSample( BOOL *pEndOfStream )
 
 BOOL AudioSource::ProcessNextSample( BOOL *pEndOfStream )
 {
-	theLogger->debug( "ProcessNextSample");
+	pTheLogger->info( CString("AudioSource"),  CString("ProcessNextSample"));
 	HRESULT hr = S_OK;
 
 	// Read the next "Sample"
 	if ( pReader == NULL )
 	{
-		theLogger->debug( "Reader disappeared!");
+		pTheLogger->fatal( CString("AudioSource"),  _T("Reader disappeared!"));
 		return FALSE;
 	}
 
@@ -317,7 +299,7 @@ BOOL AudioSource::ProcessNextSample( BOOL *pEndOfStream )
     {
         CString s;
 		s.Format( L"ProcessSamples FAILED, hr = 0x%x\n", hr);
-		Report(s);
+		pTheLogger->fatal( CString("AudioSource"), s);
 		return FALSE;
 	}
 	if ( *pEndOfStream )
@@ -437,7 +419,7 @@ BOOL AudioSource::Seek( double timeInSecs, BOOL *pEndOfStream )
     SafeRelease(&pMediaSample);
 
 	// Flush?
-    if ( FAILED( pReader->Flush( MF_SOURCE_READER_FIRST_AUDIO_STREAM ) ) )
+    if ( FAILED( pReader->Flush( (DWORD) MF_SOURCE_READER_FIRST_AUDIO_STREAM ) ) )
 	{
 		return FALSE;
 	}
@@ -449,8 +431,8 @@ BOOL AudioSource::Seek( double timeInSecs, BOOL *pEndOfStream )
 	if ( FAILED( pReader->SetCurrentPosition( GUID_NULL, varPosition ) ))
 		return FALSE;
 	CString s;
-	s.Format( L"Seek to  = %9.7f\n", timeInSecs);
-	Report(s);
+	s.Format( L"Seek to  = %9.7f", timeInSecs);
+	pTheLogger->info( CString("AudioSource"), s);
 
 	currentBufferLength = 0;
 	currentBufferIndex = 0;
@@ -508,7 +490,7 @@ BOOL AudioSource::GetNextPCMSample( double *pValueChan1, double *pValueChan2, BO
 BOOL AudioSource::SetFileDuration()
 {
     PROPVARIANT var;
-    HRESULT hr = pReader->GetPresentationAttribute(MF_SOURCE_READER_MEDIASOURCE,  MF_PD_DURATION, &var);
+    HRESULT hr = pReader->GetPresentationAttribute( (DWORD) MF_SOURCE_READER_MEDIASOURCE,  MF_PD_DURATION, &var);
     if (SUCCEEDED(hr))
     {
         hr = PropVariantToInt64(var, &duration);
@@ -525,18 +507,18 @@ BOOL AudioSource::ReportAttributes()
 
 	PROPVARIANT var;
 	WCHAR mimeType[128];
-    if (SUCCEEDED(pReader->GetPresentationAttribute(MF_SOURCE_READER_MEDIASOURCE,  MF_PD_MIME_TYPE, &var)))
+    if (SUCCEEDED(pReader->GetPresentationAttribute( (DWORD) MF_SOURCE_READER_MEDIASOURCE,  MF_PD_MIME_TYPE, &var)))
     {
         hr = PropVariantToString(var, mimeType, 128);
         PropVariantClear(&var);
 
 		CString s;
 		s.Format( _T("Mime type is %s"), mimeType );
-		Report(s);
+		pTheLogger->info( CString("AudioSource"), s);
     }
 
 	UINT32 bitrate = 0;
-    hr = pReader->GetPresentationAttribute(MF_SOURCE_READER_MEDIASOURCE,  MF_PD_AUDIO_ENCODING_BITRATE, &var);
+    hr = pReader->GetPresentationAttribute( (DWORD) MF_SOURCE_READER_MEDIASOURCE,  MF_PD_AUDIO_ENCODING_BITRATE, &var);
     if (SUCCEEDED(hr))
     {
         hr = PropVariantToUInt32(var, &bitrate);
@@ -544,12 +526,12 @@ BOOL AudioSource::ReportAttributes()
 
 		CString s;
 		s.Format( _T("Bit rate is %d"), (int) bitrate );
-		Report(s);
+		pTheLogger->info( CString("AudioSource"), s);
     }
 
 	IMFMediaType *pMediaType = NULL;
 	GUID audioType;
-	hr = pReader->GetCurrentMediaType( MF_SOURCE_READER_FIRST_AUDIO_STREAM, &pMediaType );
+	hr = pReader->GetCurrentMediaType( (DWORD) MF_SOURCE_READER_FIRST_AUDIO_STREAM, &pMediaType );
 	if ( hr == S_OK )
 	{
 		pMediaType->GetItem( MF_MT_SUBTYPE, &var);
@@ -642,7 +624,7 @@ BOOL AudioSource::ReportAttributes()
 		s.Format( _T("Samples independent = %1d "), (int) indep );
 		reportString += s;
 	}
-	Report( reportString );
+	pTheLogger->info( CString("AudioSource"),  reportString );
 
 //Attribute	Description
 //MF_MT_AM_FORMAT_TYPE	Format GUID.

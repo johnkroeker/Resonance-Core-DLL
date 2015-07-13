@@ -4,8 +4,6 @@
 
 #pragma once
 
-#include "ResonanceCore.h"
-
 #include <mfapi.h>
 #include <mfidl.h>
 #include <mfreadwrite.h>
@@ -37,11 +35,6 @@ public:
 
 // Implementation
 public:
-
-
-private:
-	void Report(CString s);
-
 };
 
 // Holds and encapsulates one instance of a MediaSourceReader
@@ -89,7 +82,6 @@ private:
 	BOOL ReadSample( BOOL *pEndOfStream );
 	BOOL ProcessNextSample( BOOL *pEndOfStream );
 	BOOL ReportAttributes();
-	void Report( CString s );
 	BOOL InitializeForGetNext();
 	INT32 Convert24Bit( BYTE b0, BYTE b1, BYTE b2 );
 

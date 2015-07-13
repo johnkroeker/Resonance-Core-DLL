@@ -9,6 +9,7 @@
 #include "DisplayBitmap.h"
 #include "ParameterPack.h"
 #include "Canvas.h"
+#include "Logger.h"
 
 enum SliceMode {TIME, ENERGY, FREQUENCY, INDICATION, SPECTRUM, SNAPSHOT};
 
@@ -33,18 +34,23 @@ public:
 
 // Operations
 public:
+	// Interface
 	BOOL OnOpenDocument(LPCTSTR  lpszPathName);
 	void OnCloseDocument();
+	BOOL getJSONActiveLegend( const char **stringLegend );
+	BOOL inputOption( CString key, CString option );
+	BOOL inputParam( CString key, double value );
 
 // Implementation
 public:
 
 private:
 	AudioSource		*pTheAudioSource;
-	ResonanceStudioProcess *ptheResonanceStudioProcess;
-	DisplayBitmap	*ptheDisplayBitmap;
-	ParameterPack *ptheParameterPack;
-	Canvas *ptheCanvas;
+	ResonanceStudioProcess *pTheResonanceStudioProcess;
+	DisplayBitmap	*pTheDisplayBitmap;
+	ParameterPack *pTheParameterPack;
+	Canvas *pTheCanvas;
+	Logger *pTheLogger;
 
 private:
 	CString audioPathName;
@@ -65,32 +71,31 @@ private:
 
 private:
 	// Graphing
-	void CheckGraphingOptions();
-	void ShowSnapshot();
+	//void checkGraphingOptions();
+	//void showSnapshot();
 
 	// View interface
 public:
-	void Report( CString s );
-	double	GetCurrentDisplayStartTime() { return currentDisplayStartTime; };
-	double	GetCurrentDisplayEndTime() { return currentDisplayEndTime; };
-	double	GetSamplingRate() { return pTheAudioSource->GetPCMSamplingRate(); };
-	CString GetSignalPathName() { return audioPathName; };
-	IMAGELEGEND* GetImageLegend();	// Will replace above
+	double	getCurrentDisplayStartTime() { return currentDisplayStartTime; };
+	double	getCurrentDisplayEndTime() { return currentDisplayEndTime; };
+	double	getSamplingRate() { return pTheAudioSource->GetPCMSamplingRate(); };
+	CString getSignalPathName() { return audioPathName; };
+	IMAGELEGEND* getImageLegend();	// Will replace above
 
-	BOOL 	FillCanvas( double requestStartTime, double requestEndTime, double *actualDuration, BOOL *pEndOfStream );
-	void		GetSignalStroke( double time0, double time1, double rangeMin, double rangeMax, double *psignalWidth, double *psignalEndValue );
-	void OnSaveDisplayAs( CString pathname ) { ptheDisplayBitmap->OnSaveDisplayAs( pathname ); };
-	BOOL GetSignalRange( double time0, double time1, double *rangeMin, double *rangeMax ) \
-			{ return ptheCanvas->GetSignalRange( time0, time1, rangeMin, rangeMax ); };
+	BOOL 	fillCanvas( double requestStartTime, double requestEndTime, double *actualDuration, BOOL *pEndOfStream );
+	void		getSignalStroke( double time0, double time1, double rangeMin, double rangeMax, double *psignalWidth, double *psignalEndValue );
+	void onSaveDisplayAs( CString pathname ) { pTheDisplayBitmap->onSaveDisplayAs( pathname ); };
+	BOOL getSignalRange( double time0, double time1, double *rangeMin, double *rangeMax ) \
+			{ return pTheCanvas->getSignalRange( time0, time1, rangeMin, rangeMax ); };
 
-	BOOL ProcessAndGetWICBitmap( IWICBitmap** ppWICBitmap );		// Main connection to draw, drives processing
-	ParameterPack* GetParameterPack() { return ptheParameterPack; };
+	BOOL processAndGetWICBitmap( IWICBitmap** ppWICBitmap );		// Main connection to draw, drives processing
+	ParameterPack* getParameterPack() { return pTheParameterPack; };
 
 //	BOOL		SetCurrentViewTime( double time1 );
-	FVECTOR *GetSpectrumAtTime( double time ) {return ptheCanvas->GetSpectrumAt( time ); };
-	double	GetCanvasMax() {return ptheCanvas->GetCanvasBufferMax(); };
-	double	GetCanvasMin() {return ptheCanvas->GetCanvasBufferMin(); };
-	void ShowSlice( double frequency, double time, SliceMode mode );
+	FVECTOR *getSpectrumAtTime( double time ) {return pTheCanvas->GetSpectrumAt( time ); };
+	double	getCanvasMax() {return pTheCanvas->GetCanvasBufferMax(); };
+	double	getCanvasMin() {return pTheCanvas->GetCanvasBufferMin(); };
+	void showSlice( double frequency, double time, SliceMode mode );
 
 	//(Future) Parameters
 	int startRampTime;

@@ -5,7 +5,15 @@
 #include "stdafx.h"
 #include "Logger.h"
 #include "Canvas.h"
+//#include "MainFrm.h"
+
 #include "ResonanceCore.h"
+//#include "ResonanceStudioDoc.h"
+//#include "ResonanceStudioGraph.h"
+
+#include <propkey.h>
+
+//extern CMainFrame *pTheMainFrame;
 
 Canvas::Canvas( size_t aSize )
 {
@@ -221,7 +229,7 @@ BOOL Canvas::GetDistributionDisplayLimits( double lowTolerance, double highToler
 
 
 // Get range directly from signalBuffer. Be very careful with exceptions.
-BOOL Canvas::GetSignalRange( double time0, double time1, double *rangeMin, double *rangeMax )
+BOOL Canvas::getSignalRange( double time0, double time1, double *rangeMin, double *rangeMax )
 {
 	*rangeMin = 0.0;
 	*rangeMax = 0.0;

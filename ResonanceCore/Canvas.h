@@ -3,7 +3,7 @@
 //
 
 #pragma once
-#include "ResonanceCore.h"
+#include "ResonanceCoreProcess.h"
 #include <vector>
 
 enum SamplingMode {UNITSAMPLING, DOWNSAMPLING};
@@ -39,7 +39,7 @@ public:
 	
 	double GetCanvasSignalMax() { return canvasSignalMax; };
 	double GetCanvasSignalMin() { return canvasSignalMin; };
-	BOOL GetSignalRange( double time0, double time1, double *rangeMin, double *rangeMax );
+	BOOL getSignalRange( double time0, double time1, double *rangeMin, double *rangeMax );
 	double GetCanvasBufferMax() { return canvasBufferMax; };
 	double GetCanvasBufferMin() { return canvasBufferMin; };
 	double GetTime1Limit() { return time1Limit; };
