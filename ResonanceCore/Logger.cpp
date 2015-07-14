@@ -10,7 +10,7 @@ using namespace std;
 
 Logger* pTheLogger = nullptr;
 
-Logger::Logger(const char * URLName )
+Logger::Logger( CString URLName )
 {
 	// Open with append
 	logFile.open( URLName, ios::out | ios::app );
@@ -37,6 +37,11 @@ bool Logger::output( CString s )
 
    // Convert CString from wide to ASCII
 	logFile << buffer << CT2A(s) << endl;
+	return true;
+}
+bool Logger::debug( CString source, char* ps )
+{
+	output ( CString("DEBUG ") + source + _T(" ") + CString(*ps) );
 	return true;
 }
 

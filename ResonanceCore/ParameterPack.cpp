@@ -647,7 +647,7 @@ CString ParameterPack::optionsAsJSON()
 	return sOut;
 }
 
-BOOL ParameterPack::getJSONActiveLegend( CString *stringLegend )
+BOOL ParameterPack::getJSONActiveLegend( CStringA *stringLegend )
 {
 	CString sOut;
 	sOut = "\n{ ";

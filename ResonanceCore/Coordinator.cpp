@@ -6,7 +6,7 @@
 #include "Logger.h"
 #include "Coordinator.h"
 //#include "MainFrm.h"
-//#include "ResonanceStudio.h"
+//#include "ResonanceCore.h"
 //#include "ResonanceStudioDoc.h"
 //#include "ResonanceStudioGraph.h"
 #include "Canvas.h"
@@ -16,13 +16,12 @@
 Coordinator* pGlobalTheCoordinator = nullptr;
 ParameterPack* theParameterPack = nullptr;
 
-// external dll interface goes here
-// notes: use BOOL here instead of bool
-//
 
 // Coordinator construction/destruction
-Coordinator::Coordinator()
+Coordinator::Coordinator( CString aWorkingPath )
 {
+	pGlobalTheCoordinator = this;
+
 	audioPathName = "";
 	pTheAudioSource = nullptr; 
 	pTheCanvas = nullptr;
@@ -37,19 +36,21 @@ Coordinator::Coordinator()
 	endOfFileTime = 0.0;
 	samplingRate = 0.0;
 	samplingInterval = 0.0;
-	pGlobalTheCoordinator = this;
 	ptheBitmap = nullptr;
 	displayDistributionLowLimit = 0.0;
 	displayDistributionHighLimit = 0.0;
 
 	pTheParameterPack = new ParameterPack();
 	theParameterPack = pTheParameterPack;
+	workingPathName = aWorkingPath;
 }
 
 // 
 BOOL Coordinator::OnOpenDocument(LPCTSTR  lpszPathName)
 	{
-	pTheLogger = new Logger( "c:\\ResonanceCore\\logfile.txt" );
+	CString logPath;
+	logPath = workingPathName + _T("\\logfile.txt");
+	pTheLogger = new Logger( logPath );
 
 	audioPathName = lpszPathName;
 	pTheAudioSource = new AudioSource();
@@ -82,8 +83,11 @@ BOOL Coordinator::OnOpenDocument(LPCTSTR  lpszPathName)
 
 void Coordinator::OnCloseDocument()
 {
-	if (pTheAudioSource )
+	if ( pTheAudioSource )
+	{
 		pTheAudioSource->ReleaseReader();
+		pTheAudioSource = nullptr;
+	}
 	if ( pTheDisplayBitmap )
 	{
 		delete pTheDisplayBitmap;
@@ -93,12 +97,13 @@ void Coordinator::OnCloseDocument()
 
 Coordinator::~Coordinator()
 {
-	//pTheAudioSource->ReleaseReader();
+	OnCloseDocument();
 	delete pTheAudioSource;
 	delete pTheCanvas;
 	delete pTheResonanceStudioProcess;
 	delete pTheDisplayBitmap;
 	delete pTheParameterPack;
+	delete pTheLogger;
 }
 
 
@@ -128,9 +133,9 @@ BOOL Coordinator::processAndGetWICBitmap(IWICBitmap** ppWICBitmap  )
 	BOOL bitmapChanged = FALSE;
 	pTheParameterPack->Process( samplingRate, &processHasChanged, &renderChanged, &bitmapChanged  );
 
-	CString JSON;
+	CStringA JSON;
 	pTheParameterPack->getJSONActiveLegend( &JSON );
-	pTheLogger->debug( _T("Coordinator"), JSON );
+	pTheLogger->debug( _T("Coordinator"), JSON.GetBuffer() );
 
 	//checkGraphingOptions();
 	//showSnapshot();
@@ -245,6 +250,16 @@ BOOL Coordinator::processAndGetWICBitmap(IWICBitmap** ppWICBitmap  )
 		//double enhanceValue = pTheParameterPack->GetDisplayPeakEnhanceValue(); 
 		*ppWICBitmap = pTheDisplayBitmap->RenderSpectrumBitmap( displayDistributionLowLimit, displayDistributionHighLimit, 
 			0.0, currentDisplayStartTime, currentDisplayEndTime );
+
+		// Save the jpeg file for pickup
+		CString imagePath;
+		imagePath = workingPathName + _T("\\spectrum.jpg");
+
+		if ( !pTheDisplayBitmap->onSaveDisplayAs( imagePath ) )
+		{
+			pTheLogger->fatal( _T("Coordinator"), _T("Could not save jpeg file") );
+			return FALSE;
+		}
 		return TRUE;
 	}
 	
@@ -397,8 +412,7 @@ void Coordinator::showSlice( double frequency, double time, SliceMode mode )
 	}
 
 }
-*/
-/*
+
 void Coordinator::showSnapshot()
 {
 	double time = pTheParameterPack->GetSnapshotTime();

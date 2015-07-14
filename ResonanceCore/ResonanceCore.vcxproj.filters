@@ -104,6 +104,9 @@
     <ClInclude Include="DrawTimeFrequencyGrid.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ResonanceDefs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="ResonanceCore.def">

@@ -130,6 +130,7 @@
     <ClInclude Include="ParameterPack.h" />
     <ClInclude Include="ResonanceCore.h" />
     <ClInclude Include="ResonanceCoreProcess.h" />
+    <ClInclude Include="ResonanceDefs.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="SignalProcesses.h" />
     <ClInclude Include="stdafx.h" />

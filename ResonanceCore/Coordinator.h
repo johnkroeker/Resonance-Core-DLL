@@ -2,7 +2,6 @@
 // Coordinator.h : interface of the CCoordinator class
 //
 
-
 #pragma once
 #include "Audio.h"
 #include "ResonanceCoreProcess.h"
@@ -10,6 +9,8 @@
 #include "ParameterPack.h"
 #include "Canvas.h"
 #include "Logger.h"
+
+
 
 enum SliceMode {TIME, ENERGY, FREQUENCY, INDICATION, SPECTRUM, SNAPSHOT};
 
@@ -29,7 +30,7 @@ typedef struct IMAGELEGEND {
 class Coordinator
 {
 public:
-	Coordinator();
+	Coordinator( CString aWorkingPath );
 	virtual ~Coordinator();
 
 // Operations
@@ -53,6 +54,7 @@ private:
 	Logger *pTheLogger;
 
 private:
+	CString workingPathName;
 	CString audioPathName;
 	double currentWorkStartTime;
 	double currentWorkEndTime;

@@ -51,7 +51,7 @@ BOOL DisplayBitmap::Release()
 {
 	brushSpectrumPalette.clear();
 	SafeRelease( &pBitmapRenderTarget );
-	SafeRelease( &pBitmapEncoder );
+	//SafeRelease( &pBitmapEncoder );	// This can fail. Is it part of the factory?
 	SafeRelease( &pWICBitmap );
 	SafeRelease( &pWICFactory );
 	SafeRelease( &pFactory );
@@ -111,6 +111,7 @@ BOOL DisplayBitmap::Initialize( UINT aBitmapHeight, UINT aBitmapWidth )
 	{
 		_com_error err( hr & 0x0000FFFF );
 		LPCTSTR errMsg = err.ErrorMessage();	
+		pTheLogger->fatal( _T("DisplayBitmap"), errMsg );
 		return FALSE;
 	}
 	SetSpectrumPalette( alphaScale, 10 );

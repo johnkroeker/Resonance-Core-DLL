@@ -3,7 +3,7 @@
 //
 #pragma once
 #include "stdafx.h"
-#include "ResonanceCore.h"
+#include "ResonanceDefs.h"
 #include <map>
 #include <cstring>
 
@@ -80,7 +80,7 @@ public:
 	// Main external interface
 	bool inputOption( CString key, CString option );
 	bool inputParam( CString key, double value );
-	BOOL getJSONActiveLegend( CString *stringLegend );
+	BOOL getJSONActiveLegend( CStringA *stringLegend );
 
 public:
 

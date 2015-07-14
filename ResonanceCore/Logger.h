@@ -15,11 +15,12 @@ using namespace std;
 class Logger
 {
 public:
-		Logger( const char * URL );
+		Logger( CString URL );
 		~Logger();
 public:
 		bool output( CString s );
 		bool debug( CString source, CString s );
+		bool debug( CString source, char * ps );
 		bool fatal( CString source, CString s );
 		bool info( CString source, CString s );
 		void setLevel( int level );
