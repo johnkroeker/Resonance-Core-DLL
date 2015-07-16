@@ -53,7 +53,7 @@ public:
 
 // Implementation
 public:
-		BOOL Create(const wchar_t * lpszPathName);
+		BOOL Create( const wchar_t * audioPathName);
 		BOOL ReleaseReader();
 		BOOL ConfigureAudioStream();
 		double GetDurationSeconds() { return ((double) duration ) * 1.0e-7; };

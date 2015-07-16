@@ -13,7 +13,7 @@
 
 
 enum SliceMode {TIME, ENERGY, FREQUENCY, INDICATION, SPECTRUM, SNAPSHOT};
-
+/*
 typedef struct IMAGELEGEND {
 	double startTime;
 	double endTime;
@@ -26,18 +26,21 @@ typedef struct IMAGELEGEND {
 	CString imageType;
 	CString sourceFileName;		// should be compatible with c# strings
 } imageLegend;
-
+*/
 class Coordinator
 {
 public:
-	Coordinator( CString aWorkingPath );
+	Coordinator();
 	virtual ~Coordinator();
 
 // Operations
 public:
 	// Interface
-	BOOL OnOpenDocument(LPCTSTR  lpszPathName);
-	void OnCloseDocument();
+	BOOL initialize( TCHAR * aWorkingPath );
+	BOOL beginSession(TCHAR * PathName);
+	BOOL endSession();
+	BOOL end();
+
 	BOOL getJSONActiveLegend( const char **stringLegend );
 	BOOL inputOption( CString key, CString option );
 	BOOL inputParam( CString key, double value );
@@ -46,6 +49,7 @@ public:
 public:
 
 private:
+	AudioFoundation *pTheAudioFoundation;
 	AudioSource		*pTheAudioSource;
 	ResonanceStudioProcess *pTheResonanceStudioProcess;
 	DisplayBitmap	*pTheDisplayBitmap;
@@ -54,8 +58,8 @@ private:
 	Logger *pTheLogger;
 
 private:
-	CString workingPathName;
 	CString audioPathName;
+	CString workingPathName;
 	double currentWorkStartTime;
 	double currentWorkEndTime;
 	double currentDisplayStartTime;
@@ -63,13 +67,13 @@ private:
 	double endOfFileTime;			// set when known.
 	double samplingRate;
 	double samplingInterval;
-
-	IWICBitmap* ptheBitmap;
-
 	double displayDistributionLowLimit;
 	double displayDistributionHighLimit;
 
-	IMAGELEGEND mainImageLegend;
+	IWICBitmap* ptheBitmap;
+
+
+	//IMAGELEGEND mainImageLegend;
 
 private:
 	// Graphing
@@ -82,7 +86,7 @@ public:
 	double	getCurrentDisplayEndTime() { return currentDisplayEndTime; };
 	double	getSamplingRate() { return pTheAudioSource->GetPCMSamplingRate(); };
 	CString getSignalPathName() { return audioPathName; };
-	IMAGELEGEND* getImageLegend();	// Will replace above
+	//IMAGELEGEND* getImageLegend();	// Will replace above
 
 	BOOL 	fillCanvas( double requestStartTime, double requestEndTime, double *actualDuration, BOOL *pEndOfStream );
 	void		getSignalStroke( double time0, double time1, double rangeMin, double rangeMax, double *psignalWidth, double *psignalEndValue );

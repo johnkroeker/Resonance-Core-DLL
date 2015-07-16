@@ -18,17 +18,20 @@ ParameterPack* theParameterPack = nullptr;
 
 
 // Coordinator construction/destruction
-Coordinator::Coordinator( CString aWorkingPath )
+Coordinator::Coordinator()
 {
 	pGlobalTheCoordinator = this;
 
-	audioPathName = "";
+	pTheAudioFoundation = nullptr;
 	pTheAudioSource = nullptr; 
 	pTheCanvas = nullptr;
 	pTheResonanceStudioProcess = nullptr;
 	pTheDisplayBitmap = nullptr;
 	pTheLogger = nullptr;
+	ptheBitmap = nullptr;
 
+	audioPathName = "";
+	workingPathName = "";
 	currentWorkStartTime = 0.0;
 	currentWorkEndTime = 0.0;
 	currentDisplayStartTime = 0.0;
@@ -36,30 +39,43 @@ Coordinator::Coordinator( CString aWorkingPath )
 	endOfFileTime = 0.0;
 	samplingRate = 0.0;
 	samplingInterval = 0.0;
-	ptheBitmap = nullptr;
 	displayDistributionLowLimit = 0.0;
 	displayDistributionHighLimit = 0.0;
 
 	pTheParameterPack = new ParameterPack();
 	theParameterPack = pTheParameterPack;
-	workingPathName = aWorkingPath;
 }
 
-// 
-BOOL Coordinator::OnOpenDocument(LPCTSTR  lpszPathName)
-	{
+BOOL Coordinator::initialize( TCHAR * aWorkingPath )
+{
+	workingPathName = CString( aWorkingPath );
 	CString logPath;
 	logPath = workingPathName + _T("\\logfile.txt");
 	pTheLogger = new Logger( logPath );
+	pTheLogger->info( _T("Coordinator::initialize" ), CString( logPath ) );
+	
+	// Initialize the Media Foundation platform
+	pTheAudioFoundation = new AudioFoundation();
+	if ( !pTheAudioFoundation->Initialize() )
+		return FALSE;
+	return TRUE;
 
-	audioPathName = lpszPathName;
+}
+
+// 
+BOOL Coordinator::beginSession( TCHAR * pathName )
+	{
+	audioPathName = CString( pathName );
+	pTheLogger->info( _T("Coordinator::beginSession" ), CString( audioPathName ) );
+
 	pTheAudioSource = new AudioSource();
-	if (!pTheAudioSource->Create(lpszPathName) )
+	const wchar_t * lpszAudioPathName = (LPCWSTR) audioPathName;
+	if (!pTheAudioSource->Create( lpszAudioPathName) )
 	{
 		pTheLogger->fatal( _T("Coordinator"), _T( "File open failed" ) );
 		return FALSE;
 	}
-	
+
 	// Valid after Create.
 	samplingRate = pTheAudioSource->GetPCMSamplingRate();
 	if ( samplingRate <= 0.00 )
@@ -76,28 +92,48 @@ BOOL Coordinator::OnOpenDocument(LPCTSTR  lpszPathName)
 	UINT bitmapHeight = (UINT) pTheParameterPack->GetDisplayBitmapHeight();
 	pTheDisplayBitmap->Initialize( bitmapHeight, bitmapWidth );
 
-//	pTheParameterPack->Process( samplingRate );
+	pTheLogger->info( _T("Coordinator::beginSession" ), CString( "Done setup" ) );
+	IWICBitmap* pWICBitmap;
+	processAndGetWICBitmap( &pWICBitmap  );
+	pTheLogger->info( _T("Coordinator::beginSession" ), CString( "Processing Done" ) );
 
 	return TRUE;
 	};
 
-void Coordinator::OnCloseDocument()
+BOOL Coordinator::endSession()
 {
 	if ( pTheAudioSource )
 	{
 		pTheAudioSource->ReleaseReader();
 		pTheAudioSource = nullptr;
 	}
-	if ( pTheDisplayBitmap )
-	{
-		delete pTheDisplayBitmap;
-		pTheDisplayBitmap = nullptr;
-	}
+
+	delete pTheAudioSource;
+	delete pTheDisplayBitmap;
+	delete pTheCanvas;
+	delete pTheResonanceStudioProcess;
+	delete pTheParameterPack;
+	pTheAudioSource = nullptr;
+	pTheDisplayBitmap = nullptr;
+	pTheCanvas = nullptr;
+	pTheResonanceStudioProcess = nullptr;
+	pTheParameterPack = nullptr;
+	pTheLogger->info( _T("Coordinator::endSession" ), CString( "Done" ) );
+
+	return TRUE;
+}
+
+BOOL Coordinator::end()
+{
+	pTheAudioFoundation->Shutdown();
+	delete pTheLogger;
+	pTheLogger = nullptr;
+	return TRUE;
 }
 
 Coordinator::~Coordinator()
 {
-	OnCloseDocument();
+	delete pTheAudioFoundation;
 	delete pTheAudioSource;
 	delete pTheCanvas;
 	delete pTheResonanceStudioProcess;

@@ -11,6 +11,7 @@
 #include "MFapi.h"
 #include "mmreg.h"
 
+
 // Other non-MS codecs. This is another GUID for which I do not understand why I need to have my own.
 //#define WAVE_FORMAT_FLAC    0xF1AC
 //#define WAVE_FORMAT_FLAC   {0000F1AC-0000-0010-8000-00AA00389B71}
@@ -36,6 +37,9 @@ template <class T> void SafeRelease(T **ppT)
 // Audio construction
 
 AudioFoundation::AudioFoundation()
+{
+}
+AudioFoundation::~AudioFoundation()
 {
 }
 
@@ -92,12 +96,12 @@ AudioSource::~AudioSource()
 		ReleaseReader();		// just in case
 }
 
-BOOL AudioSource::Create(const wchar_t * lpszPathName)
+BOOL AudioSource::Create( const wchar_t * audioPathName)
 {
 	ReleaseReader();
-	
+
 	// MFCreateSourceReaderFromURL fails with access violation when file has 0 bytes. We need to do a test file open.
-	HANDLE hFile = CreateFile( lpszPathName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL);
+	HANDLE hFile = CreateFile( audioPathName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL);
 	LARGE_INTEGER fSize;
 	if ( hFile == INVALID_HANDLE_VALUE)
 	{
@@ -119,11 +123,11 @@ BOOL AudioSource::Create(const wchar_t * lpszPathName)
 	}
 
 	// Create the source reader to read the input file.
-	HRESULT hr = MFCreateSourceReaderFromURL(lpszPathName, NULL, &pReader);
+	HRESULT hr = MFCreateSourceReaderFromURL( audioPathName, NULL, &pReader);
 	if (FAILED(hr))
 	{
 		CString s;	
-		s.Format( _T("Can't open media source from URL %s"), lpszPathName );	
+		s.Format( _T("Can't open media source from URL %s"), audioPathName );	
 		pTheLogger->fatal( CString("AudioSource"), s);
 		return FALSE;
 	}
@@ -131,7 +135,7 @@ BOOL AudioSource::Create(const wchar_t * lpszPathName)
 	SetFileDuration();
 	fileDuration = GetDurationSeconds();
 	CString s;
-	s.Format( _T("%s opened, duration is %10.5f seconds."), lpszPathName, fileDuration );
+	s.Format( _T("%s opened, duration is %10.5f seconds."), audioPathName, fileDuration );
 	pTheLogger->info( CString("AudioSource"), s);
 	ReportAttributes();
 	if (!ConfigureAudioStream() )

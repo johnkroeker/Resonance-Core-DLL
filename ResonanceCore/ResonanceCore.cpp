@@ -4,6 +4,8 @@
 #include "stdafx.h"
 #include "ResonanceCore.h"
 #include "Coordinator.h"
+#include <exception>
+using namespace std;
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -36,28 +38,50 @@
 extern Coordinator* pGlobalTheCoordinator;
 extern ParameterPack* theParameterPack;
 
-
 // external dll interface for interface to managed code
 // notes: use BOOL here instead of bool
 // need to have the .h file for use of the calling side
-extern "C" _declspec(dllexport) void __stdcall resonanceCoreCreate( char* localStorageURL )
+
+// Create basic object
+extern "C" _declspec(dllexport) void __stdcall resonanceCoreCreate()
 {
 	AFX_MANAGE_STATE(AfxGetStaticModuleState());
-	pGlobalTheCoordinator = new Coordinator( CString(localStorageURL) );
+	pGlobalTheCoordinator = new Coordinator();
 }
 
-extern "C" _declspec(dllexport) void __stdcall resonanceCoreBeginSession( char* audioFileURL )
+// This is the initialize (begin state) for all sessions
+extern "C" _declspec(dllexport) void __stdcall resonanceCoreInitialize( TCHAR * localStorageURL )
 {
 	AFX_MANAGE_STATE(AfxGetStaticModuleState());
-	pGlobalTheCoordinator->OnOpenDocument( (LPCTSTR) audioFileURL );
+	pGlobalTheCoordinator->initialize( localStorageURL );
+}
+
+extern "C" _declspec(dllexport) int __stdcall resonanceCoreBeginSession( TCHAR * audioFileURL )
+{
+	AFX_MANAGE_STATE(AfxGetStaticModuleState());
+	try
+	{
+		pGlobalTheCoordinator->beginSession( audioFileURL );
+	} catch (exception& e)
+	{
+		if ( pTheLogger != nullptr )
+			pTheLogger->fatal( _T("caught exception"), CString( e.what() ) );
+		return FALSE;
+	}
+	return TRUE;
 }
 
 // Notes: on managed side, use, re MSDN
 // extern "C" __declspec(dllexport) char *resonanceCoreGetLegend(void);
 // IntPtr ptr = resonanceCoreGetLegend(); 
 // string str = Marshal.PtrToStringAuto(ptr);
-//
-extern "C" _declspec(dllexport) char * __stdcall resonaceCoreGetLegend()
+// OR
+//extern "C" __declspec(dllexport) char*  __stdcall StringReturnAPI01()
+//DllImport("<path to DLL>", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.StdCall)]
+//[return: MarshalAs(UnmanagedType.LPStr)]
+//public static extern string StringReturnAPI01();
+
+extern "C" _declspec(dllexport) char * __stdcall resonanceCoreGetLegend()
 {
 	AFX_MANAGE_STATE(AfxGetStaticModuleState());
 	CStringA legend;		// not wide chars
@@ -67,9 +91,9 @@ extern "C" _declspec(dllexport) char * __stdcall resonaceCoreGetLegend()
 
 //
 // Notes: on managed side, use, re MSDN
-// extern static public void resonanceCoreInputOption( [MarshalAs(UnmanagedType::LPStr)]String^, ...
+// extern static public void resonanceCoreInputOption( [MarshalAs(UnmanagedType.LPStr)]String^, ...
 //
-extern "C" _declspec(dllexport) void __stdcall resonaceCoreInputOption( char* key, char* value )
+extern "C" _declspec(dllexport) void __stdcall resonanceCoreInputOption( TCHAR * key, TCHAR * value )
 {
 	AFX_MANAGE_STATE(AfxGetStaticModuleState());
 	theParameterPack->inputOption( CString(key), CString(value) );
@@ -77,16 +101,23 @@ extern "C" _declspec(dllexport) void __stdcall resonaceCoreInputOption( char* ke
 
 // Notes: on managed side, use, re MSDN, by generalization!
 //..., safe_cast<double>(value) )
-extern "C" _declspec(dllexport) void __stdcall resonanceCoreInputParam( char* key, double value )
+extern "C" _declspec(dllexport) void __stdcall resonanceCoreInputParam( TCHAR * key, double value )
 {
 	AFX_MANAGE_STATE(AfxGetStaticModuleState());
 	theParameterPack->inputParam( CString(key), value );
 }
-extern "C" _declspec(dllexport) void __stdcall resonanceCoreCompute(/*?? needed??*/);
+
 extern "C" _declspec(dllexport) void __stdcall resonanceCoreEndSession()
 {
 	AFX_MANAGE_STATE(AfxGetStaticModuleState());
-	pGlobalTheCoordinator->OnCloseDocument();
+	pGlobalTheCoordinator->endSession();
+}
+
+// Shut down and any final reporting goes here
+extern "C" _declspec(dllexport) void __stdcall resonanceCoreEnd()
+{
+	AFX_MANAGE_STATE(AfxGetStaticModuleState());
+	pGlobalTheCoordinator->end();
 }
 
 extern "C" _declspec(dllexport) void __stdcall resonanceCoreDestroy()
