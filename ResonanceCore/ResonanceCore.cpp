@@ -50,18 +50,18 @@ extern "C" _declspec(dllexport) void __stdcall resonanceCoreCreate()
 }
 
 // This is the initialize (begin state) for all sessions
-extern "C" _declspec(dllexport) void __stdcall resonanceCoreInitialize( TCHAR * localStorageURL )
+extern "C" _declspec(dllexport) int __stdcall resonanceCoreInitialize( TCHAR * localStorageURL )
 {
 	AFX_MANAGE_STATE(AfxGetStaticModuleState());
-	pGlobalTheCoordinator->initialize( localStorageURL );
+	return pGlobalTheCoordinator->initialize( localStorageURL );
 }
 
-extern "C" _declspec(dllexport) int __stdcall resonanceCoreBeginSession( TCHAR * audioFileURL )
+extern "C" _declspec(dllexport) int __stdcall resonanceCoreBeginSession( TCHAR * audioFileURL, TCHAR * imagePath )
 {
 	AFX_MANAGE_STATE(AfxGetStaticModuleState());
 	try
 	{
-		pGlobalTheCoordinator->beginSession( audioFileURL );
+		pGlobalTheCoordinator->beginSession( audioFileURL, imagePath );
 	} catch (exception& e)
 	{
 		if ( pTheLogger != nullptr )
@@ -84,33 +84,35 @@ extern "C" _declspec(dllexport) int __stdcall resonanceCoreBeginSession( TCHAR *
 extern "C" _declspec(dllexport) char * __stdcall resonanceCoreGetLegend()
 {
 	AFX_MANAGE_STATE(AfxGetStaticModuleState());
-	CStringA legend;		// not wide chars
-	theParameterPack->getJSONActiveLegend( &legend );
-	return legend.GetBuffer();
+	//CStringA legend;		// not wide chars
+	//theParameterPack->getJSONActiveLegend( &legend );
+	CStringA status = theParameterPack->statusAsJSON();
+	pTheLogger->info( _T("legend ="), CString(status) );
+	return status.GetBuffer();
 }
 
 //
 // Notes: on managed side, use, re MSDN
 // extern static public void resonanceCoreInputOption( [MarshalAs(UnmanagedType.LPStr)]String^, ...
 //
-extern "C" _declspec(dllexport) void __stdcall resonanceCoreInputOption( TCHAR * key, TCHAR * value )
+extern "C" _declspec(dllexport) int __stdcall resonanceCoreInputOption( TCHAR * key, TCHAR * value )
 {
 	AFX_MANAGE_STATE(AfxGetStaticModuleState());
-	theParameterPack->inputOption( CString(key), CString(value) );
+	return theParameterPack->inputOption( CStringA(key), CStringA(value) );
 }
 
 // Notes: on managed side, use, re MSDN, by generalization!
 //..., safe_cast<double>(value) )
-extern "C" _declspec(dllexport) void __stdcall resonanceCoreInputParam( TCHAR * key, double value )
+extern "C" _declspec(dllexport) int __stdcall resonanceCoreInputParam( TCHAR * key, double value )
 {
 	AFX_MANAGE_STATE(AfxGetStaticModuleState());
-	theParameterPack->inputParam( CString(key), value );
+	return theParameterPack->inputParam( CStringA(key), value );
 }
 
-extern "C" _declspec(dllexport) void __stdcall resonanceCoreEndSession()
+extern "C" _declspec(dllexport) int __stdcall resonanceCoreEndSession()
 {
 	AFX_MANAGE_STATE(AfxGetStaticModuleState());
-	pGlobalTheCoordinator->endSession();
+	return pGlobalTheCoordinator->endSession();
 }
 
 // Shut down and any final reporting goes here

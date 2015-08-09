@@ -49,10 +49,12 @@ Coordinator::Coordinator()
 BOOL Coordinator::initialize( TCHAR * aWorkingPath )
 {
 	workingPathName = CString( aWorkingPath );
+
 	CString logPath;
 	logPath = workingPathName + _T("\\logfile.txt");
 	pTheLogger = new Logger( logPath );
 	pTheLogger->info( _T("Coordinator::initialize" ), CString( logPath ) );
+	pTheLogger->info( _T("Coordinator::initialize from " ), CString( aWorkingPath ) );
 	
 	// Initialize the Media Foundation platform
 	pTheAudioFoundation = new AudioFoundation();
@@ -63,7 +65,7 @@ BOOL Coordinator::initialize( TCHAR * aWorkingPath )
 }
 
 // 
-BOOL Coordinator::beginSession( TCHAR * pathName )
+BOOL Coordinator::beginSession( TCHAR * pathName, TCHAR * imagePath )
 	{
 	audioPathName = CString( pathName );
 	pTheLogger->info( _T("Coordinator::beginSession" ), CString( audioPathName ) );
@@ -94,7 +96,7 @@ BOOL Coordinator::beginSession( TCHAR * pathName )
 
 	pTheLogger->info( _T("Coordinator::beginSession" ), CString( "Done setup" ) );
 	IWICBitmap* pWICBitmap;
-	processAndGetWICBitmap( &pWICBitmap  );
+	processAndGetWICBitmap( &pWICBitmap, workingPathName + CString(imagePath) );
 	pTheLogger->info( _T("Coordinator::beginSession" ), CString( "Processing Done" ) );
 
 	return TRUE;
@@ -162,16 +164,12 @@ Coordinator::~Coordinator()
 // View Interface
 
 // Called by OnDraw. True if new bitmap
-BOOL Coordinator::processAndGetWICBitmap(IWICBitmap** ppWICBitmap  )
+BOOL Coordinator::processAndGetWICBitmap(IWICBitmap** ppWICBitmap, CString imagePath  )
 {
 	BOOL processHasChanged = FALSE;
 	BOOL renderChanged = FALSE;
 	BOOL bitmapChanged = FALSE;
 	pTheParameterPack->Process( samplingRate, &processHasChanged, &renderChanged, &bitmapChanged  );
-
-	CStringA JSON;
-	pTheParameterPack->getJSONActiveLegend( &JSON );
-	pTheLogger->debug( _T("Coordinator"), JSON.GetBuffer() );
 
 	//checkGraphingOptions();
 	//showSnapshot();
@@ -191,7 +189,9 @@ BOOL Coordinator::processAndGetWICBitmap(IWICBitmap** ppWICBitmap  )
 		currentDisplayStartTime = 0.0;
 		currentDisplayEndTime = 0.0;
 		endOfFileTime = 0.0;
-		pTheLogger->fatal( _T("Coordinator"), _T( "Illegal time request" ) );
+		CString s;
+		s.Format( _T("Illegal time request at start %f to end %f"), time0, time1 );
+		pTheLogger->fatal( _T("Coordinator"), s );
 		return FALSE;
 	}
 
@@ -214,7 +214,6 @@ BOOL Coordinator::processAndGetWICBitmap(IWICBitmap** ppWICBitmap  )
 			return FALSE;
 		}		
 		rampTime = pTheResonanceStudioProcess->GetProcessMemoryTime();
-//		report( CString( "Creating process") );
 	}
 
 
@@ -288,9 +287,6 @@ BOOL Coordinator::processAndGetWICBitmap(IWICBitmap** ppWICBitmap  )
 			0.0, currentDisplayStartTime, currentDisplayEndTime );
 
 		// Save the jpeg file for pickup
-		CString imagePath;
-		imagePath = workingPathName + _T("\\spectrum.jpg");
-
 		if ( !pTheDisplayBitmap->onSaveDisplayAs( imagePath ) )
 		{
 			pTheLogger->fatal( _T("Coordinator"), _T("Could not save jpeg file") );

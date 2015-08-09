@@ -21,13 +21,13 @@ enum RS_SNAP_CHOICE			{ SNAP_NONE, SNAP_ENERGY, SNAP_ENTROPY, SNAP_INDICATION, S
 enum RS_FFT_CHOICE			{ RS_FFT_NONE, RS_DO_FFT, RS_FFT_LIMITED };
 enum RS_PROCESSING_FLAG		{ RS_PROCESS_FLAG, RS_BITMAP_FLAG, RS_RENDER_FLAG, RS_TIMECHANGE_FLAG, RS_GRAPH_FLAG};
 
-typedef map<CString,double> MAPDOUBLE;
+typedef map<CStringA,double> MAPDOUBLE;
 typedef MAPDOUBLE::iterator MAPDOUBLEIT;
 
-typedef map<CString,int> MAPINT;
+typedef map<CStringA,int> MAPINT;
 typedef MAPINT::iterator MAPINTIT;
 
-typedef map<CString,CString> MAPSTRING;
+typedef map<CStringA,CStringA> MAPSTRING;
 typedef MAPSTRING::iterator MAPSTRINGIT;
 
 class FrequencyScale
@@ -78,9 +78,12 @@ public:
 	BOOL Process( double samplingRate, BOOL *pProcessChange, BOOL *renderChange, BOOL *bitmpChange );
 
 	// Main external interface
-	bool inputOption( CString key, CString option );
-	bool inputParam( CString key, double value );
+	bool inputOption( CStringA key, CStringA option );
+	bool inputParam( CStringA key, double value );
 	BOOL getJSONActiveLegend( CStringA *stringLegend );
+	CStringA optionsAsJSON();
+	CStringA paramsAsJSON();
+	CStringA statusAsJSON();
 
 public:
 
@@ -90,7 +93,7 @@ public:
 
 private:
 	OutStatusData outputParams;
-	CString inputFileURL;
+	CStringA inputFileURL;
 
 	// Validation and storage
 	MAPDOUBLE parameters;
@@ -135,11 +138,10 @@ private:
 	void SetLabels();
 	void SetPresets();
 	void SetStrategy();
-	CString FindKeyByInt( MAPINT *pMap, int key );
-	CString FindKeyByDouble( MAPDOUBLE *pMap, double key );
-	CString optionsAsJSON();
-	CString paramsAsJSON();
-	CString statusAsJSON();
+	BOOL setFriendlyPreset( CStringA value );
+	BOOL setFriendlyStrategy( CStringA value );
+	CStringA FindKeyByInt( MAPINT *pMap, int key );
+	CStringA FindKeyByDouble( MAPDOUBLE *pMap, double key );
 	
 public:
 
@@ -153,10 +155,10 @@ public:
 	RS_GRAPH_CHOICE GetGraphChoice();
 	RS_SNAP_CHOICE GetSnapChoice();
 
-	CString GetGraphName( int id ) {return FindKeyByInt( &graphChoice, id ); };
-	CString GetAlgorithmName( int id ) {return FindKeyByInt( &algorithmChoice, id ); };
-	CString GetIntegrationName( int id ) {return FindKeyByInt( &integrationChoice, id ); };
-	CString GetSnapName( int id ) {return FindKeyByInt( &snapChoice, id ); };
+	CStringA GetGraphName( int id ) {return FindKeyByInt( &graphChoice, id ); };
+	CStringA GetAlgorithmName( int id ) {return FindKeyByInt( &algorithmChoice, id ); };
+	CStringA GetIntegrationName( int id ) {return FindKeyByInt( &integrationChoice, id ); };
+	CStringA GetSnapName( int id ) {return FindKeyByInt( &snapChoice, id ); };
 	MAPDOUBLE* GetLabelMap();
 
 	FrequencyScale *GetFrequencyScale() { return ptheScale; };
@@ -178,26 +180,26 @@ public:
 	BOOL GetAndClearRenderChangeFlag()		{ BOOL tmp = renderHasChanged; renderHasChanged = FALSE; return tmp; };
 	BOOL GetAndClearBitmapChangeFlag()		{ BOOL tmp = bitmapHasChanged; bitmapHasChanged = FALSE; return tmp; };
 
-	double GetBandwidthDisplayScale()	{ return parameters[ CString("Bandwidth display scale") ]; };
-	double GetDisplayBitmapHeight()		{ return parameters[ CString("Display bitmap height") ]; };
-	double GetDisplayBitmapWidth()		{ return parameters[ CString("Display bitmap width") ]; };
-	double GetDisplayDistributionLow()	{ return parameters[ CString("Histogram low cut fraction") ]; };
-	double GetDisplayDistributionHigh() { return parameters[ CString("Histogram high cut fraction") ]; };
-	double GetDisplayStart()				{ return parameters[ CString("Display start time") ]; };
-	double GetDisplayEnd()				{ return parameters[ CString("Display end time") ]; };
-	BOOL GetDoFFT()						{ return  options[ CString("FFT power spectrum") ] != RS_FFT_NONE; };
-	BOOL GetFFTDisplayLimited()			{ return options[ CString("FFT power spectrum") ] == RS_FFT_LIMITED; };
-	int	GetFFTOrder()					{ return (int) parameters[ CString("FFT order") ]; };
-	double GetFFTStep()					{ return parameters[ CString("FFT fractional stepsize") ]; };
-	double GetRequestedNumberOfFilters()		{ return parameters[ CString("Requested number of filters") ]; };
-	double GetHighFrequencyLimit()		{ return parameters[ CString("High frequency limit") ]; };
-	double GetIntegrationTau()			{ return parameters[ CString("Integration time constant") ]; };
-	double GetLocalityScale()			{ return parameters[ CString("Locality scale") ]; };
-	double GetLowFrequencyLimit()		{ return parameters[ CString("Low frequency limit") ]; };
-	double GetMaxBandwidth()				{ return parameters[ CString("Max bandwidth") ]; };
-	double GetMinFrequencySpacing()		{ return parameters[ CString("Min frequency spacing") ]; };
-	double GetNoiseFloor()				{ return parameters[ CString("Noise floor") ]; };
-	double GetSnapshotTime()				{ return parameters[ CString("Snapshot time") ]; };
+	double GetBandwidthDisplayScale()	{ return parameters[ CStringA("bandwidth display scale") ]; };
+	double GetDisplayBitmapHeight()		{ return parameters[ CStringA("display bitmap height") ]; };
+	double GetDisplayBitmapWidth()		{ return parameters[ CStringA("display bitmap width") ]; };
+	double GetDisplayDistributionLow()	{ return parameters[ CStringA("histogram low cut fraction") ]; };
+	double GetDisplayDistributionHigh() { return parameters[ CStringA("histogram high cut fraction") ]; };
+	double GetDisplayStart()				{ return parameters[ CStringA("starttime") ]; };
+	double GetDisplayEnd()				{ return parameters[ CStringA("endtime") ]; };
+	BOOL GetDoFFT()						{ return  options[ CStringA("fft power spectrum") ] != RS_FFT_NONE; };
+	BOOL GetFFTDisplayLimited()			{ return options[ CStringA("fft power spectrum") ] == RS_FFT_LIMITED; };
+	int	GetFFTOrder()					{ return (int) parameters[ CStringA("fft order") ]; };
+	double GetFFTStep()					{ return parameters[ CStringA("fft fractional stepsize") ]; };
+	double GetRequestedNumberOfFilters()		{ return parameters[ CStringA("requested number of filters") ]; };
+	double GetHighFrequencyLimit()		{ return parameters[ CStringA("high frequency limit") ]; };
+	double GetIntegrationTau()			{ return parameters[ CStringA("integration time constant") ]; };
+	double GetLocalityScale()			{ return parameters[ CStringA("locality scale") ]; };
+	double GetLowFrequencyLimit()		{ return parameters[ CStringA("low frequency limit") ]; };
+	double GetMaxBandwidth()				{ return parameters[ CStringA("max bandwidth") ]; };
+	double GetMinFrequencySpacing()		{ return parameters[ CStringA("min frequency spacing") ]; };
+	double GetNoiseFloor()				{ return parameters[ CStringA("noise floor") ]; };
+	double GetSnapshotTime()				{ return parameters[ CStringA("snapshot time") ]; };
 
 };
 

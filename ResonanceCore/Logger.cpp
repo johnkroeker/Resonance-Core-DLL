@@ -56,6 +56,10 @@ bool Logger::fatal( CString source, CString s )
 	output ( CString("FATAL ") + source + _T(" ") + s );
 	return true;
 }
+bool Logger::info( char * ps1, char * ps2 )
+{
+	return info( CString( ps1 ), CString( ps2 ) );
+}
 
 bool Logger::info( CString source, CString s )
 {
@@ -63,6 +67,16 @@ bool Logger::info( CString source, CString s )
 	return true;
 }
 
+bool Logger::warning( CString source, CString s )
+{
+	output ( CString("WARN ") + source + _T(" ") + s );
+	return true;
+}
+
+bool Logger::warning( char * ps1, char * ps2 )
+{
+	return warning( CString( ps1 ), CString( ps2 ) );
+}
 void Logger::setLevel( int level )
 {
 	//Debug	6

@@ -289,7 +289,6 @@ BOOL AudioSource::ReadSample( BOOL *pEndOfStream )
 
 BOOL AudioSource::ProcessNextSample( BOOL *pEndOfStream )
 {
-	pTheLogger->info( CString("AudioSource"),  CString("ProcessNextSample"));
 	HRESULT hr = S_OK;
 
 	// Read the next "Sample"

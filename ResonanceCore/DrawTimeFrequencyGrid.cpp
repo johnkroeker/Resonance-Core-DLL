@@ -204,8 +204,8 @@ void DrawTimeFrequencyGrid::DrawHorizontalGrid( MAPDOUBLE *pLabelMap, int nHoriz
 				continue;
 
 			float yCoord = (float) DrawScaledGridLine( 0.0, fy, rectangleSize.width, fy, pVGridBrush );
-			CString frequencyLabel = it->first;
-			DrawLabel( frequencyLabel, 0.0f, yCoord );
+			CStringA frequencyLabel = it->first;
+			DrawLabel( CString(frequencyLabel), 0.0f, yCoord );
 		}
 	}
 }

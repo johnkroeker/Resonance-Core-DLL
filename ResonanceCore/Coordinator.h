@@ -37,7 +37,7 @@ public:
 public:
 	// Interface
 	BOOL initialize( TCHAR * aWorkingPath );
-	BOOL beginSession(TCHAR * PathName);
+	BOOL beginSession(TCHAR * PathName, TCHAR * imagePath );
 	BOOL endSession();
 	BOOL end();
 
@@ -94,7 +94,7 @@ public:
 	BOOL getSignalRange( double time0, double time1, double *rangeMin, double *rangeMax ) \
 			{ return pTheCanvas->getSignalRange( time0, time1, rangeMin, rangeMax ); };
 
-	BOOL processAndGetWICBitmap( IWICBitmap** ppWICBitmap );		// Main connection to draw, drives processing
+	BOOL processAndGetWICBitmap( IWICBitmap** ppWICBitmap, CString imagePath );		// Main connection to draw, drives processing
 	ParameterPack* getParameterPack() { return pTheParameterPack; };
 
 //	BOOL		SetCurrentViewTime( double time1 );

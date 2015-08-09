@@ -23,6 +23,9 @@ public:
 		bool debug( CString source, char * ps );
 		bool fatal( CString source, CString s );
 		bool info( CString source, CString s );
+		bool info( char * ps1, char * ps2 );
+		bool warning( CString source, CString s );
+		bool warning( char * ps1, char * ps2 );
 		void setLevel( int level );
 
 private:
